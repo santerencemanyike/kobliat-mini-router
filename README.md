@@ -93,6 +93,45 @@ curl -v -X POST http://127.0.0.1:8000/api/webhooks/messages \
 	-d '{"external_user_id":"+123456788","body":"Hello test","channel":"facebook"}'
 ```
 
+Example requests (curl)
+
+- Inbound webhook (create an inbound message / conversation):
+
+```bash
+curl -v -X POST http://127.0.0.1:8000/api/webhooks/messages \
+	-H "Content-Type: application/json" \
+	-d '{"external_user_id":"+123456788","body":"Hello test","channel":"facebook"}'
+```
+
+- List conversations (server-side DataTables-friendly JSON):
+
+```bash
+curl -v http://127.0.0.1:8000/api/conversations
+```
+
+- View a conversation (messages + metadata):
+
+```bash
+curl -v http://127.0.0.1:8000/api/conversations/1
+```
+
+- Send a reply (protected API - requires `API_TOKEN`):
+
+```bash
+curl -v -X POST http://127.0.0.1:8000/api/conversations/1/reply \
+	-H "Content-Type: application/json" \
+	-H "X-API-TOKEN: your-api-token-here" \
+	-d '{"body":"Thanks, I received your message.","channel":"facebook"}'
+```
+
+- Send a reply (UI-friendly endpoint used by the admin UI; no client token required):
+
+```bash
+curl -v -X POST http://127.0.0.1:8000/api/conversations/1/reply-ui \
+	-H "Content-Type: application/json" \
+	-d '{"body":"Thanks from UI","channel":"facebook"}'
+```
+
 Notes and examples
 
 - `external_user_id` is the identifier for the user on the external platform (phone number, platform id, etc.).
@@ -166,3 +205,32 @@ Quick test checklist
 - Call the webhook curl example to create a conversation.
 - Open the admin UI at `/` and confirm the conversation appears in the DataTable.
 - Click a conversation to open the modal, view per-channel tabs, and use the reply UI; replies posted from the UI use `POST /api/conversations/{id}/reply-ui` and do not require sending `API_TOKEN` from the browser.
+
+3. If I had more time — Improvements & Next Steps
+
+Below are realistic, high-value changes and improvements that would make this project production-ready and improve the UX for chat-style systems.
+
+- UI & UX
+	- Responsive, mobile-first UI: make the admin layout fully responsive, collapse sidebars, stack controls on small screens.
+	- Message list performance: implement message virtualization (infinite scroll / windowing) for long conversations.
+	- Real-time updates: add WebSockets (Laravel Echo + Pusher / Redis + Socket server) for incoming messages, typing indicators, and message status updates.
+	- Rich content support: support attachments, images, link previews, and markdown/plain-text rendering with sanitization.
+	- Improved reply composer: add quick-replies, templates, message history, and message scheduling.
+
+- Reliability & server-side
+	- Queue outbound work: use Laravel Queues for outbound sending, retries, and backoff policies; make reply saving synchronous but sending asynchronous.
+	- Database modeling & indexes: add targeted indexes (customer id, conversation id, channel, sent_at) and optimize queries for the DataTables server-side pagination.
+
+- Security & validation
+	- Harden validation and error handling: return structured JSON validation errors and show friendly messages in the UI.
+	- Authentication & roles: secure the admin UI with authentication (Laravel auth / Sanctum) and add role-based permissions for agents.
+	- Secrets & transport: enforce TLS, protect API tokens, rotate credentials, and avoid exposing secrets to the browser.
+
+- Observability & testing
+	- Add logging/metrics: structured logs, request tracing, and metrics (Prometheus/Grafana or external APM).
+	- Add automated tests: feature tests for webhook handling, controller logic, and UI  tests.
+	- Add CI: run tests, static analysis.
+
+- Scalability & operations
+	- Scale stateless app horizontally and use Redis for session/cache; migrate long-running work to workers.
+	- Use read replicas and connection pooling for high read throughput; shard data if conversations grow very large.
