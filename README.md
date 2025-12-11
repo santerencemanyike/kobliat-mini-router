@@ -4,7 +4,7 @@ Quick notes to run the exercise locally (MySQL):
 
 ## Kobliat Mini Router — Run & Populate (detailed)
 
-This section explains how to run the app locally (direct or Docker), prepare the environment, run migrations, and populate data by calling the webhook endpoint (the curl example you provided is included).
+This section explains how to run the app locally (direct or Docker), prepare the environment, run migrations, and populate data by calling the webhook endpoint.
 
 Prerequisites
 
@@ -61,7 +61,7 @@ php artisan serve --host=127.0.0.1 --port=8000
 
 Now open the admin UI at http://127.0.0.1:8000/ (it uses a minimal Bootstrap/DataTables admin view).
 
-Option B — Docker Compose (recommended to match other machines)
+Option B — Docker Compose
 
 1. Build and run containers
 
