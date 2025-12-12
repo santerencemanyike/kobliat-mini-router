@@ -145,4 +145,14 @@ class ConversationController extends Controller
 
         return response()->json(null, 204);
     }
+
+    // Close conversation (UI-safe)
+    public function closeFromUi($id)
+    {
+        $conversation = Conversation::findOrFail($id);
+        $conversation->status = 'closed';
+        $conversation->save();
+
+        return response()->json(['status' => $conversation->status]);
+    }
 }

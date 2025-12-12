@@ -71,6 +71,9 @@
                 <div class="d-grid">
                   <button class="btn btn-primary" type="submit">Send Reply (store outbound)</button>
                 </div>
+                <div class="d-grid mt-2">
+                  <button id="closeConvBtn" type="button" class="btn close-conv-btn">Close Conversation</button>
+                </div>
               </form>
             </div>
             <div class="col-md-8">
@@ -116,6 +119,7 @@ $(function(){
     .open-text{display:inline}
     .delete-bin{display:none;vertical-align:middle;margin-left:6px}
     .delete-text{display:inline}
+    .close-conv-btn{background-color: rgb(207,46,46); color: #fff; border-color: rgb(207,46,46)}
     @media (max-width:1000px){
       .open-text{display:none}
       .open-eye{display:inline-block}
@@ -175,6 +179,8 @@ $(function(){
   }
 
   function loadConversation(id){
+    // disable actions while loading
+    setButtonsDisabled(true);
     fetch('/api/conversations/' + id)
       .then(r => r.json())
       .then(payload => {
@@ -184,10 +190,26 @@ $(function(){
         $('#convStatus').text(data.status || '');
         const messages = data.messages || [];
         renderTabs(messages);
+        // disable buttons if status is closed, otherwise enable
+        const isClosed = (data.status||'').toString().toLowerCase() === 'closed';
+        setButtonsDisabled(isClosed);
       }).catch(err => {
         console.error('loadConversation error', err);
         Swal.fire({ icon: 'error', title: 'Load failed', text: 'Failed to load conversation' });
       });
+  }
+
+  function setButtonsDisabled(disabled){
+    // reply submit and textarea
+    $('#replyForm').find('button[type=submit]').prop('disabled', disabled);
+    $('#replyForm').find('textarea[name=body]').prop('disabled', disabled);
+    // close button
+    $('#closeConvBtn').prop('disabled', disabled);
+    if(disabled){
+      $('#closeConvBtn').addClass('disabled');
+    } else {
+      $('#closeConvBtn').removeClass('disabled');
+    }
   }
 
   function renderTabs(messages){
@@ -263,6 +285,34 @@ $(function(){
         msg = err.message;
       }
       Swal.fire({ icon: 'error', title: 'Send failed', text: msg });
+    });
+  });
+
+  // Close conversation handler
+  $('#closeConvBtn').on('click', function(){
+    if(!currentConvId) return Swal.fire({ icon: 'warning', title: 'No conversation', text: 'No conversation selected' });
+    Swal.fire({
+      title: 'Close conversation?',
+      text: 'Mark this conversation as closed?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, close',
+      cancelButtonText: 'Cancel'
+    }).then(result => {
+      if(!result.isConfirmed) return;
+      fetch('/api/conversations/' + currentConvId + '/close', { method: 'POST' })
+        .then(r => { if(!r.ok) return r.json().then(j=>{ throw j; }); return r.json(); })
+        .then(json => {
+          $('#convStatus').text('closed');
+          // disable reply/close after closing
+          setButtonsDisabled(true);
+          table.ajax.reload(null,false);
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Conversation closed', showConfirmButton: false, timer: 1500 });
+        }).catch(err => {
+          console.error('closeConversation', err);
+          const msg = (err && err.message) ? err.message : 'Failed to close conversation';
+          Swal.fire({ icon: 'error', title: 'Close failed', text: msg });
+        });
     });
   });
 

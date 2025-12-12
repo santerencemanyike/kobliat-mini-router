@@ -14,5 +14,8 @@ Route::post('/conversations/{id}/reply', [ConversationController::class, 'reply'
 // UI-friendly reply endpoint (server-side uses env token internally; no client token required)
 Route::post('/conversations/{id}/reply-ui', [ConversationController::class, 'replyFromUi']);
 
+// Close conversation (UI use)
+Route::post('/conversations/{id}/close', [ConversationController::class, 'closeFromUi']);
+
 // Delete a customer and all related conversations/messages
 Route::delete('/customers/{id}', [ConversationController::class, 'deleteCustomer']);
