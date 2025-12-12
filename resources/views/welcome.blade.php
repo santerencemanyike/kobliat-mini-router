@@ -101,8 +101,9 @@ $(function(){
     if(!ch) return '';
     const safe = (ch+'').toLowerCase().replace(/[^a-z0-9_-]/g,'');
     const src = `/icons/${safe}.png`;
-    // use a small img tag; the file should exist in public/icons/<channel>.png
-    return `<img src="${src}" alt="${safe}" class="channel-icon"/>`;
+    // if the icon is missing, replace the <img> with the plain channel name text
+    const enc = encodeURIComponent(ch+'');
+    return `<img src="${src}" alt="${safe}" class="channel-icon" onerror="this.outerHTML=decodeURIComponent('${enc}')"/>`;
   }
 
   // small styling for channel icons (size + spacing)
@@ -135,7 +136,9 @@ $(function(){
   function updateChannelSelectIcon(){
     const val = ($channelSelect.val()||'').toLowerCase().replace(/[^a-z0-9_-]/g,'');
     const src = `/icons/${val}.png`;
-    $channelSelectIcon.attr('src', src).attr('alt', val);
+    // if the image fails to load, show the channel name instead
+    const enc = encodeURIComponent($channelSelect.val()||'');
+    $channelSelectIcon.attr('src', src).attr('alt', val).attr('onerror', `this.outerHTML=decodeURIComponent('${enc}')`);
   }
   if($channelSelect.length && $channelSelectIcon.length){
     $channelSelect.on('change', updateChannelSelectIcon);
