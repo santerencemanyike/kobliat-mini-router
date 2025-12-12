@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kobliat Mini Router</title>
+  <link rel="icon" href="/logo/kobliat.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -12,7 +13,10 @@
 <body>
 <div class="container">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Kobliat Mini Router</h1>
+    <div class="d-flex align-items-center">
+      <img src="/logo/kobliat.png" alt="Kobliat" class="site-logo me-2" />
+      <h1 class="header-title mb-0">Kobliat Mini Router</h1>
+    </div>
     <div></div>
   </div>
 
@@ -38,7 +42,7 @@
   <div class="modal fade" id="conversationModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
       <div class="modal-content">
-        <div class="modal-header">
+        <div class="modal-header" style="background-color: rgb(207, 46, 46); color: white;">
           <h5 class="modal-title" id="convTitle">Conversation</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -103,6 +107,24 @@ $(function(){
   style.innerHTML = '.channel-icon{display:inline-block;width:20px;height:20px;object-fit:contain;margin-right:8px;vertical-align:middle}';
   document.head.appendChild(style);
 
+  // site header logo styling and responsive button text/icon
+  const headerStyle = document.createElement('style');
+  headerStyle.innerHTML = `
+    .site-logo{width:36px;height:36px;object-fit:contain}
+    .header-title{font-size:1.25rem}
+    .open-eye{display:none;vertical-align:middle;margin-left:6px}
+    .open-text{display:inline}
+    .delete-bin{display:none;vertical-align:middle;margin-left:6px}
+    .delete-text{display:inline}
+    @media (max-width:1000px){
+      .open-text{display:none}
+      .open-eye{display:inline-block}
+      .delete-text{display:none}
+      .delete-bin{display:inline-block}
+    }
+  `;
+  document.head.appendChild(headerStyle);
+
   // update the select-adjacent icon when the channel select changes
   const $channelSelect = $('#channelSelect');
   const $channelSelectIcon = $('#channelSelectIcon');
@@ -128,8 +150,11 @@ $(function(){
       { data: 'messages_count' },
       { data: null, orderable:false, render: function(d){
           const custId = d.customer && d.customer.id ? d.customer.id : '';
-          return `<button class="btn btn-sm btn-primary openConv" data-id="${d.id}">Open</button> ` +
-                 (custId ? `<button class="btn btn-sm btn-danger deleteCustomer" data-customer-id="${custId}">Delete Customer</button>` : '');
+          const eyeSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="bi bi-eye">\n  <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8z"/>\n  <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/>\n</svg>';
+          const openBtn = `<button class="btn btn-sm btn-primary openConv" data-id="${d.id}"><span class="open-text">Open</span><span class="open-eye" aria-hidden>${eyeSvg}</span></button>`;
+          const binSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="bi bi-trash">\n  <path d="M5.5 5.5A.5.5 0 0 1 6 5h4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5H6a.5.5 0 0 1-.5-.5v-7z"/>\n  <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 1 1 0-2H5.5L6 1h4l.5 1H13.5a1 1 0 0 1 1 1z"/>\n</svg>';
+          const deleteBtn = custId ? `<button class="btn btn-sm btn-danger deleteCustomer" data-customer-id="${custId}"><span class="delete-text">Delete Customer</span><span class="delete-bin" aria-hidden>${binSvg}</span></button>` : '';
+          return openBtn + ' ' + deleteBtn;
         } }
     ]
   });
@@ -143,7 +168,7 @@ $(function(){
 
   function openConversation(id){
     currentConvId = id;
-    $('#convTitle').text('Conversation #' + id);
+    $('#convTitle').text('Conversation ' + id);
     loadConversation(id);
     var modal = new bootstrap.Modal(document.getElementById('conversationModal'));
     modal.show();
